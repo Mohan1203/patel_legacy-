@@ -5998,14 +5998,14 @@ fieldset:disabled .wizard>.actions a,
 .btn-primary,
 .wizard>.actions a {
     color: #fff;
-    background-color: #f7d478;
+    background-color: #f47b20;
     border-color: #f7d478;
 }
 
 .btn-primary:hover,
 .wizard>.actions a:hover {
     color: #fff;
-    background-color: #fec22b;
+    background-color: #f7d478;
     border-color: #fec22b;
 }
 
