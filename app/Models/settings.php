@@ -8,7 +8,8 @@ class settings extends Model
 {
     protected $table = "setting";
     protected $fillable = [
-        'icon',
-        'logo'
+        'name',
+        'logo',
+        'link'
     ];
 }

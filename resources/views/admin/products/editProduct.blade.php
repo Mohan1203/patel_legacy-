@@ -28,16 +28,7 @@
                                             </div>
                                         </div>
 
-                                        <script>
-                                            function previewImage(event) {
-                                                const reader = new FileReader();
-                                                reader.onload = function() {
-                                                    const output = document.getElementById('imagePreview');
-                                                    output.src = reader.result;
-                                                };
-                                                reader.readAsDataURL(event.target.files[0]);
-                                            }
-                                        </script>
+                                       
                                         <div class="mb-3">
                                             <label for="description" class="form-label">Description</label>
                                             <textarea class="form-control" id="description" name="description"
@@ -48,5 +39,16 @@
                                 </div>
                             </div>
                         </div>
+
+                        <script>
+                            function previewImage(event) {
+                                const reader = new FileReader();
+                                reader.onload = function() {
+                                    const output = document.getElementById('imagePreview');
+                                    output.src = reader.result;
+                                };
+                                reader.readAsDataURL(event.target.files[0]);
+                            }
+                        </script>
 
 @endsection

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\featureSection;
 
 
 class ProductController extends Controller
@@ -14,7 +15,9 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::all();
-        return view('admin.products.addproduct',compact('products'));
+        $featureSection = featureSection::first();
+
+        return view('admin.products.addproduct',compact('products','featureSection'));
     }
 
     /**
@@ -60,13 +63,39 @@ class ProductController extends Controller
      */
     public function show()
     {
-        $product = Product::all();
-        if ($product) {
-            return response()->json($product);
-        } else {
-            return redirect()->back()->with('error', 'Product not found');
+        try{
+            $product = Product::all();
+            $product = $product->map(function ($item){
+                return[
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'description' => $item->description,
+                    'image' => asset(env('APP_URL').'/'.'images/'.$item->image),
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
+            $featureSection = featureSection::first();
+            $data = [
+               'success' => true,
+                'data'=>[
+                    'products' => $product,
+                    'featureSection' => $featureSection,
+                ]
+            ];
+            return response()->json($data);
+        }catch(\Exception $e){
+            $data = [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+            return response()->json($data);
         }
+       
     }
+
+
+    
 
     /**
      * Show the form for editing the specified resource.
@@ -120,5 +149,36 @@ class ProductController extends Controller
         } else {
             return redirect()->back()->with('error', 'Product not found');
         }
+    }
+    
+    
+
+
+    public function updateFeatureSection(Request $request)
+    {
+        try{
+            $request->validate([
+                'title' => 'required',
+                'description' => 'required',
+            ]);
+            // dd($request->all());
+            // $featureSection = featureSection::first();
+            // if ($featureSection) {
+                $featureSection = featureSection::firstOrCreate(
+                    [],
+                    [
+                        'title' => $request->title,
+                        'description' => $request->description,
+                    ]
+                );
+                $featureSection->title = $request->title;
+                $featureSection->description = $request->description;
+                $featureSection->save();
+                return redirect()->back()->with('success', 'Feature section updated successfully');
+            // }
+        }catch(\Exception $e){
+            dd($e);
+        }
+      
     }
 }

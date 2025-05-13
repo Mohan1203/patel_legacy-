@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Models\blogsCategory;
+use App\Models\blogs;
+use Illuminate\Database\QueryException;  
+
 class BlogController extends Controller
 {
     /**
@@ -11,15 +15,38 @@ class BlogController extends Controller
      */
     public function index()
     {
-        return view('admin.blogs.addblogs');
+        $categories = blogsCategory::all();
+        $blogs = blogs::with('category')->get();
+        return view('admin.blogs.addblogs', compact('categories', 'blogs'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        try{
+            $validated = $request->validate([
+                'title' => 'required|unique:blogs,title',
+                'content' => 'required',
+                'category' => 'required|exists:blog_category,id',
+                'slug' => 'required|unique:blogs,slug',
+            ]);
+            $blog = new blogs();
+            $blog->slug = $request->input('slug');
+            $blog->title = $request->input('title');
+            $blog->content = $request->input('content');
+            $blog->category_id = $request->input('category');
+            $blog->created_at = now();
+            $blog->updated_at = now();
+            $blog->save();
+            return redirect()->back()->with('success', 'blog added successfully');
+        }catch(QueryException $e){
+            if ($e->getcode() == 23000){
+                return back()->with('error','Category with slug already exists');
+            }
+            return back()->with('error','Something went wrong');
+        }
     }
 
     /**
@@ -27,15 +54,38 @@ class BlogController extends Controller
      */
     public function store(Request $request)
     {
-        //
+      
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request)
     {
-      //
+        if($request->slug){
+            $blog = blogs::where('slug', $request->slug)->with('category')->first();
+            $data;
+            if($blog){
+            $data = [
+                    'success' => true,
+                    'data' => $blog,
+                ];
+            }else{
+                $data = [
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Blog not found'
+                ];
+            }
+            return response()->json($data);
+        }else{
+            $blogs = blogs::with('category')->get();
+            $data = [
+                'success' => true,
+                'data' => $blogs,
+            ];
+            return response()->json($data);
+        }
     }
 
     /**
@@ -43,7 +93,8 @@ class BlogController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $blog = blogs::findOrFail($id);
+        return view('admin.blogs.editblogs', compact('blog'));
     }
 
     /**
@@ -51,7 +102,24 @@ class BlogController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        
+        try{
+            $request->validate([
+                'title' => 'required',
+                'content' => 'required',
+            ]);
+            $blog = blogs::findOrFail($id);
+            $blog->title = $request->input('title');
+            $blog->content = $request->input('content');
+            $blog->category_id = $blog->category_id; // Keep the same category
+            $blog->updated_at = now();
+            $blog->save();
+            return redirect()->back()->with('success', 'Blog updated successfully');
+        }catch(\Exception $e){
+            dd($e->getMessage());
+            return response()->json(['error' => 'An error occurred while updating the blog.'], 500);
+        }
+
     }
 
     /**
@@ -59,6 +127,47 @@ class BlogController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try{
+            $blog = blogs::findOrFail($id);
+            $blog->delete();
+            return redirect()->back()->with('success', 'Blog deleted successfully');
+        }catch(\Exception $e){
+            dd($e->getMessage());
+            return response()->json(['error' => 'An error occurred while deleting the blog.'], 500);
+        }
+    }
+
+    public function uploadImage(Request $request)
+{
+    $request->validate([
+        'file' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+    ]);
+
+    // Store file in "public/tinyImages"
+    $file = $request->file('file');
+    $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+    $file->move(public_path('tinyImages'), $filename);
+
+    $url = asset('tinyImages/' . $filename);
+
+    // Store uploaded path for cleanup (optional)
+    $uploadedImages = session()->get('uploaded_images', []);
+    $uploadedImages[] = 'tinyImages/' . $filename;
+    session()->put('uploaded_images', $uploadedImages);
+
+    return response()->json(['location' => $url]);
+}
+    public function cleanupUploadedImages()
+    {
+    $uploadedImages = session()->get('uploaded_images', []);
+
+    foreach ($uploadedImages as $image) {
+        if (file_exists(public_path($image))) {
+            unlink(public_path($image));
+        }
+    }
+
+    session()->forget('uploaded_images');
+    return response()->json(['message' => 'Uploaded images cleaned up successfully.']);
     }
 }

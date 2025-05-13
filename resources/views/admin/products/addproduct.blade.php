@@ -8,23 +8,23 @@
                     <div class="col-12 ">
                         <div>
                             {{-- <h4 class="card-title"></h4> --}}
+                            <h4 class="card-title">Feature Section</h4>
                             <div class="card">
                                 <div class="card-body">
-                                    {{-- <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data"> --}}
-                                        {{-- @csrf --}}
+                                    <form action="{{ route('handle.addFeature') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
                                         <div class="mb-3">
                                             <label for="name" class="form-label">Section Title</label>
-                                            <input type="text" class="form-control" id="name" name="name"
-                                                placeholder="Section Title" required>
+                                            <input type="text" class="form-control" id="name" name="title"
+                                                placeholder="Section Title" required value="{{ $featureSection->title ?? '' }}">
                                         </div>
                                         <div class="mb-3">
                                             <label for="description" class="form-label">Section Description</label>
                                             <textarea class="form-control" id="description" name="description"
-                                                rows="4"></textarea>
+                                                rows="4">{{ $featureSection->description ?? '' }}</textarea>
                                         </div>
                                         <button type="submit" class="btn btn-primary">Submit</button>
-                                        {{-- <a href="{{ route('products.index') }}" class="btn btn-secondary">Back</a> --}}
-                                    {{-- </form> --}}
+                                    </form>
                                 </div>
                             </div>
                         </div>

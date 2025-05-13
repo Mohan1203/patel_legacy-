@@ -7,11 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class blogs extends Model
 {
-    protected $table = "blog";
+    protected $table = "blogs";
     protected $fillable = [
         'title',
-        'description',
-        'image',
+        'content',
         'category_id',
         'created_at',
         'updated_at',
@@ -19,4 +18,6 @@ class blogs extends Model
 public function category():BelongsTo{
         return $this->belongsTo(blogsCategory::class,'category_id');
     }
+
+   
 }
