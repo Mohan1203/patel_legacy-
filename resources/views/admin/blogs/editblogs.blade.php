@@ -18,6 +18,14 @@
                                             placeholder="Enter title" required  value="{{ $blog->title }}">
                                     </div>
                                     <div class="mb-3">
+                                        <label for="image" class="form-label">Image</label>
+                                        <input type="file" class="form-control" id="image" name="coverImage"
+                                            accept=".jpg, .jpeg, .png, .webp" onchange="previewImage(event)">
+                                        <div class="mt-3">
+                                            <img id="imagePreview" src="{{ asset(env('APP_URL').  '/' . $blog['cover_image']) }}" alt="Product Image" class="img-fluid" style="max-width: 200px;">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="description" class="form-label">Content</label>
                                         <textarea id="editor" name="content">{{ $blog->content }}</textarea>
                                     </div>
@@ -85,5 +93,17 @@
     }
         });
     </script>
+
+
+<script>
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const output = document.getElementById('imagePreview');
+            output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
     
 @endsection

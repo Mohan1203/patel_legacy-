@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Models\blogsCategory;
 use App\Models\blogs;
+use App\Models\settings;
 use Illuminate\Database\QueryException;  
 
 class BlogController extends Controller
@@ -31,12 +31,18 @@ class BlogController extends Controller
                 'content' => 'required',
                 'category' => 'required|exists:blog_category,id',
                 'slug' => 'required|unique:blogs,slug',
+                'coverImage'=> 'required|image|mimes:jpg,jpeg,png,gif,webp|max:20048',
             ]);
+
+            $imageName = time() . '.' . $request->coverImage->extension();
+            $request->coverImage->move(public_path('cover_images'), $imageName);
+            $url = 'cover_images/' . $imageName;
             $blog = new blogs();
             $blog->slug = $request->input('slug');
             $blog->title = $request->input('title');
             $blog->content = $request->input('content');
             $blog->category_id = $request->input('category');
+            $blog->cover_image = $url;
             $blog->created_at = now();
             $blog->updated_at = now();
             $blog->save();
@@ -62,13 +68,32 @@ class BlogController extends Controller
      */
     public function show(Request $request)
     {
+        $limit = $request->limit ? $request->limit : 9;
+        $offset = $request->offset ? $request->offset : 0;
+
         if($request->slug){
+            $data = [];
+            $categories = blogsCategory::limit(5)->get();
             $blog = blogs::where('slug', $request->slug)->with('category')->first();
-            $data;
+            $socialIcons = settings::all();
+            $socialIcons = $socialIcons->map(function ($item){
+                return[
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'icon' => asset(env('APP_URL').'/'.$item->icon),
+                    'url_link' => $item->url_link,
+                ];
+            });
             if($blog){
+            $blog->cover_image = asset(env('APP_URL').'/'.$blog->cover_image);   
+            $responseData = [
+                'blog' => $blog,
+                'categories' => $categories,
+                'social'=> $socialIcons,
+            ];
             $data = [
                     'success' => true,
-                    'data' => $blog,
+                    'data' => $responseData,
                 ];
             }else{
                 $data = [
@@ -79,7 +104,22 @@ class BlogController extends Controller
             }
             return response()->json($data);
         }else{
-            $blogs = blogs::with('category')->get();
+            $blogs = blogs::with('category')->skip($offset)->take($limit)->get();
+            $blogs = $blogs->map(function ($item){
+                return $item;
+            });
+            $blogs = $blogs->map(function ($item){
+                return[
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                    'created_by' => $item->admin,
+                    'category' => $item->category->name,
+                    'cover_image' => $item->cover_image = asset(env('APP_URL').'/'.$item->cover_image),
+                    'created_at' => $item->created_at,
+                    'updated_at' => $item->updated_at,
+                ];
+            });
             $data = [
                 'success' => true,
                 'data' => $blogs,
@@ -113,6 +153,12 @@ class BlogController extends Controller
             $blog->content = $request->input('content');
             $blog->category_id = $blog->category_id; // Keep the same category
             $blog->updated_at = now();
+            if($request->hasFile('coverImage')){
+                $imageName = time() . '.' . $request->coverImage->extension();
+                $request->coverImage->move(public_path('cover_images'), $imageName);
+                $url = 'cover_images/' . $imageName;
+                $blog->cover_image = $url;
+            }
             $blog->save();
             return redirect()->back()->with('success', 'Blog updated successfully');
         }catch(\Exception $e){

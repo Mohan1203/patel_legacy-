@@ -53,6 +53,10 @@
                                         </select>
                                     </div>
                                     <div class="mb-3">
+                                        <label for="image" class="form-label">Cover Image</label>
+                                        <input type="file" class="form-control" id="image" name="coverImage" accept="image/*">
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="description" class="form-label">Content</label>
                                         <textarea id="editor" name="content">{{ old('content') }}</textarea>
                                     </div>

@@ -12,6 +12,9 @@ class blogs extends Model
         'title',
         'content',
         'category_id',
+        'slug',
+        'cover_image',
+        'admin',
         'created_at',
         'updated_at',
     ];
